@@ -26,7 +26,7 @@ class TaskController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'status' => 'required|in:pending,completed',
+            'status' => 'required|in:pending,in-progress,completed',
             'due_date' => 'required|date',
             'category_id' => 'required|exists:categories,id',
         ]);
@@ -90,11 +90,23 @@ class TaskController extends Controller
 
     public function filterByStatus(Request $request)
     {
+       
         $status = $request->input('status', 'pending');
+        
+        
+        $validStatuses = ['pending', 'in-progress', 'completed'];
+    
+        
+        if (!in_array($status, $validStatuses)) {
+            $status = 'pending'; 
+        }
+    
+        
         $tasks = Task::where('status', $status)->paginate(10);
-
+    
         return TaskResource::collection($tasks);
     }
+    
 
 
     public function search(Request $request)
