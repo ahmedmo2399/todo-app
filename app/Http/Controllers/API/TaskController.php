@@ -14,11 +14,26 @@ class TaskController extends Controller
 {
      use AuthorizesRequests;
 
-    public function index(Request $request)
-    {
-        $tasks = Task::paginate(10);
-        return TaskResource::collection($tasks);
-    }
+     public function index(Request $request)
+     {
+         $query = Task::query();
+
+
+         if ($request->has('status') && $request->status !== 'all') {
+             $query->where('status', $request->status);
+         }
+
+
+         if ($request->has('query') && $request->query !== '') {
+             $query->where('title', 'like', '%' . $request->query . '%')
+                   ->orWhere('description', 'like', '%' . $request->query . '%');
+         }
+
+         
+         $tasks = $query->paginate(10);
+
+         return TaskResource::collection($tasks);
+     }
 
 
     public function store(Request $request)
@@ -90,23 +105,23 @@ class TaskController extends Controller
 
     public function filterByStatus(Request $request)
     {
-       
+
         $status = $request->input('status', 'pending');
-        
-        
+
+
         $validStatuses = ['pending', 'in-progress', 'completed'];
-    
-        
+
+
         if (!in_array($status, $validStatuses)) {
-            $status = 'pending'; 
+            $status = 'pending';
         }
-    
-        
+
+
         $tasks = Task::where('status', $status)->paginate(10);
-    
+
         return TaskResource::collection($tasks);
     }
-    
+
 
 
     public function search(Request $request)
